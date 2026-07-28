@@ -2,11 +2,14 @@
 
 El proceso actual de gestión de atención ciudadana opera bajo un esquema completamente manual y secuencial, donde cada correo recibido en la casilla oficial depende de la intervención directa de un operador para su apertura, lectura, interpretación y carga artesanal en Trello. Esta dinámica —que abarca desde la evaluación subjetiva del grado de urgencia hasta la redacción individualizada de respuestas— genera prolongados tiempos de espera en bandeja (de 1 a 24 horas), demanda un esfuerzo operativo considerable de entre 18 y 35 minutos por caso y conlleva una tasa de error en la clasificación del 15% al 20% debido a la fatiga y a la falta de criterios estandarizados.
 
-[Proceso analógio (Manual)](#proceso-analógio-manual)
+* [Proceso analógio (Manual)](#proceso-analógio-manual)
+* [Proceso propuesto automatizado (con IA)](#proceso-propuesto-automatizado-con-ia)
+* [Guía paso a paso para desplegar en Make.com](#guía-paso-a-paso-para-desplegar-en-makecom)
+* [Integrar la API Key de Google Gemini en Make.com](#integrar-la-api-key-de-google-gemini-en-makecom)
+* [Integrar Trello en Make.com](#integrar-trello-en-makecom)
 
-[Proceso propuesto automatizado (con IA)](#proceso-propuesto-automatizado-con-ia)
 
-[Guía paso a paso para desplegar en Make.com](#guía-paso-a-paso-para-desplegar-en-makecom)
+![gestion ingesta inteligente reclamos ciudadanos](imagen/gestion_ingesta_inteligente_reclamos_ciudadanos.png)
 
 ## Proceso analógio (Manual)
 
@@ -142,7 +145,7 @@ Criterios de clasificación de Urgencia:
         Cuerpo del correo: {{1.text}}
 2.  **Formato de Respuesta:** Configura el parámetro responseMimeType a application/json dentro de generationConfig.
 
-### Paso 3: Parsear la Respuesta de la IA (JSON Parser)
+#### Paso 3: Parsear la Respuesta de la IA (JSON Parser)
 
 Dado que Gemini devuelve una cadena de texto en formato JSON, debemos estructurarla para que Make.com la interprete como variables independientes.
 
@@ -150,14 +153,14 @@ Dado que Gemini devuelve una cadena de texto en formato JSON, debemos estructura
 2.  **JSON String:** Mapea la salida de texto o resultado del **Módulo 2 (Gemini)**: {{2.result}}.
 3.  Ejecuta el módulo una vez manualmente para que Make detecte la estructura del objeto devuelto (urgencia, tono_sentimiento, puntos_clave, resumen_problema, borrador_respuesta).
 
-### Paso 4: Bifurcación del Flujo (Router y Filtros)
+#### Paso 4: Bifurcación del Flujo (Router y Filtros)
 
 El Router evaluará el nivel de urgencia extraído por el Parser y dirigirá el flujo hacia la rama correspondiente.
 
 1.  Añade un módulo **Flow Control - Router** después del JSON Parser.
 2.  El Router creará **3 ramas de salida** (Rama A, Rama B, Rama C).
 
-#### Configuración de los Filtros en las Conexiones:
+##### Configuración de los Filtros en las Conexiones:
 
 - **Filtro de la Rama A (Urgente):**
     - **Nombre:** Urgencia == Urgente
@@ -175,7 +178,7 @@ El Router evaluará el nivel de urgencia extraído por el Parser y dirigirá el 
     - **Operador:** Text operator: Equal to (case-insensitive).
     - **Valor:** Nada Urgente.
 
-### Paso 5: Creación de Tarjetas Priorizadas en Trello
+#### Paso 5: Creación de Tarjetas Priorizadas en Trello
 
 Cada rama del Router terminará en un módulo de Trello configurado para crear una tarjeta en la columna **Backlog**, pero diferenciándose en el color de la etiqueta.
 
@@ -202,7 +205,7 @@ Cada rama del Router terminará en un módulo de Trello configurado para crear u
 - **Módulo 5B (Rama Poco Urgente):** Asigna la etiqueta de color **Amarillo** 🟡.
 - **Módulo 5C (Rama Nada Urgente):** Asigna la etiqueta de color **Verde** 🟢.
 
-## Pruebas y Validación
+#### Pruebas y Validación
 
 1.  **Enviar correos de prueba:**
 
@@ -214,9 +217,9 @@ Cada rama del Router terminará en un módulo de Trello configurado para crear u
 2.  **Verificación:** Inspecciona las tarjetas generadas en Trello. Confirma que cada una tenga la etiqueta de color adecuada, el borrador de respuesta institucional redactado y el enlace al ID del correo original.
 3.  **Activación:** Activa la automatización con la llave de encendido (**ON**) para que responda automáticamente en tiempo real.
 
-## Guía Paso a Paso: Integrar la API Key de Google Gemini en Make.com
+## Integrar la API Key de Google Gemini en Make.com
 
-### Paso 1: Obtener la API Key en Google AI Studio
+### Obtener la API Key en Google AI Studio
 
 1.  **Acceder a Google AI Studio:**
     - Ingresa a [](https://www.google.com/search?q=https://studio.google.com)[aistudio.google.com](https://aistudio.google.com) en tu navegador.
@@ -230,7 +233,7 @@ Cada rama del Router terminará en un módulo de Trello configurado para crear u
 
 **Nota de seguridad:** Trata tu API Key como si fuera una contraseña personal. Nunca la compartas públicamente ni la incluyas directamente en archivos de código abiertos.
 
-### Paso 2: Asociar la API Key dentro de Make.com
+### Asociar la API Key dentro de Make.com
 
 Puedes vincular tu clave tanto en los módulos de IA estándar de Gemini como en el módulo **Make AI Agent (New)**.
 
@@ -251,33 +254,33 @@ Puedes vincular tu clave tanto en los módulos de IA estándar de Gemini como en
 5.  Haz clic en **Save**.
 6.  En el desplegable **Model**, selecciona un modelo compatible como gemini-2.5-flash o gemini-1.5-flash.
 
-### Paso 3: Validar la Conexión
+### Validar la Conexión
 
 1.  Guarda los cambios en tu módulo\[cite: 8\].
 2.  Haz clic con el botón derecho sobre el módulo de Gemini o del Agente y selecciona **Run this module only** (Ejecutar solo este módulo).
 3.  Si el módulo muestra una palomita verde ✔️ y devuelve un resultado sin errores, tu API Key ha quedado correctamente vinculada y lista para usarse en cualquier automatización.
 
-## Guía Paso a Paso: Integrar Trello en Make.com
+## Integrar Trello en Make.com
 
-### Paso 1: Iniciar la vinculación desde Make.com
+### Iniciar la vinculación desde Make.com
 
 1.  Abre tu escenario en Make.com y entra a la ventana de configuración del módulo de **Trello** (por ejemplo, Create a Card).
 2.  En la parte superior de la ventana del módulo, ubica el campo **Connection**.
 3.  Haz clic en el botón azul **Add** (Agregar) situado a la derecha del menú desplegable.
 
-### Paso 2: Nombrar y autorizar la conexión
+### Nombrar y autorizar la conexión
 
 1.  En la ventana emergente que se abre, asigna un nombre reconocible para tu conexión en el campo **Connection name** (por ejemplo, Trello - Atención Ciudadana).
 2.  Haz clic en el botón **Save** (o _Continue_).
 3.  Make.com te redirigirá automáticamente a una ventana segura de autenticación de **Trello** (Atlassian). Si aún no has iniciado sesión en Trello en tu navegador, ingresa tus credenciales (correo y contraseña).
 
-### Paso 3: Otorgar permisos de acceso
+### Otorgar permisos de acceso
 
 1.  Trello mostrará una pantalla de autorización informando los permisos que Make.com solicita (lectura y escritura de tableros, listas y tarjetas).
 2.  Desplázate hacia el final de la página y haz clic en el botón verde **Allow** (Permitir).
 3.  Una vez autorizado el acceso, la ventana se cerrará automáticamente y volverás al panel de configuración del módulo en Make.com.
 
-### Paso 4: Seleccionar Tablero, Lista y Etiquetas
+### Seleccionar Tablero, Lista y Etiquetas
 
 Con la conexión activa, Make cargará dinámicamente los datos de tu cuenta de Trello:
 
